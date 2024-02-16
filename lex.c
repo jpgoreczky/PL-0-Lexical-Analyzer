@@ -11,61 +11,113 @@ gtrsym, geqsym, lparentsym, rparentsym, commasym, semicolonsym,
 periodsym, becomessym, beginsym, endsym, ifsym, thensym,
 whilesym, dosym, callsym, constsym, varsym, procsym, writesym,
 readsym , elsesym
-} token_type;
+} tokenType;
 
 // Lexeme structure
 typedef struct {
-    char lexeme[12]; // Assuming a maximum of 11 characters plus null terminator
-    token_type type;
+    char varName[12]; // Assuming a maximum of 11 characters plus null terminator
+    tokenType tokenType;
+    int numVal;
+    int errorType;
 } lexeme;
 
-// Global variables for lexeme list and index
-lexeme* lexeme_list;
-int lexeme_index = 0;
+// Global variables
+lexeme* lexemeList;
+int lexemeIndex = 0;
+char * reservedWords[] = {"begin", "end", "if", "then", "while", 
+                        "do", "call", "const", "var", "procedure", "write", "read", "else"};
+char specialSym[] = {'+', '-', '*', '/', '(', ')', '=', ',' , '.', '<', '>', ';' , ':'};
 
-// Function to print an error message, free lexeme list, and exit
-void printerror(const char* message) {
-    fprintf(stderr, "Lexical Error: %s\n", message);
-    free(lexeme_list);
-    exit(EXIT_FAILURE);
+// Print an error message, free lexeme list, and exit
+void printError(lexeme* lexemeList, int size) {
+    for (int i = 0; i < size; i++) {
+        // if i is a number
+        if (lexemeList[i].tokenType == 3) {
+            switch (lexemeList[i].errorType)
+            {
+            case 1: // Number too long
+                printf("Number too long.");
+                break;
+            case 2: // Name Too Long
+                printf("Name too long.");
+                break;
+            case 3: // Invalid Symbols
+                printf("Invalid symbols.");
+                break;
+            }
+        } else { // i is not a number
+            switch (lexemeList[i].errorType)
+            {
+            case 1: // Number too long
+                printf("Number too long.");
+                break;
+            case 2: // Name Too Long
+                printf("Name too long.");
+                break;
+            case 3: // Invalid Symbols
+                printf("Invalid symbols.");
+                break;
+            }
+        }
+    }
+    
 }
 
-// Function to print the lexeme table and token list
-void printtokens() {
+// Print the lexeme table and token list
+void printTokens() {
     printf("Lexeme Table:\n");
-    for (int i = 0; i < lexeme_index; ++i) {
-        printf("%s\t%d\n", lexeme_list[i].lexeme, lexeme_list[i].type);
+    for (int i = 0; i < lexemeIndex; ++i) {
+        printf("%s\t%d\n", lexemeList[i].varName, lexemeList[i].type);
+    }
+}
+
+// Print Source Program
+void printSrc(FILE* fp) {
+    printf("Source Program:\n");
+    char input;
+
+    fseek(fp, 0, SEEK_SET);
+    while ((input = fgetc(fp)) != EOF) {
+        putchar(input);
     }
 }
 
 // Function to handle the lexeme analysis
-lexeme* lexanalyzer(char* input) {
+lexeme* lexAnalyzer(FILE *fp) {
     // Initialize lexeme list
-    lexeme_list = malloc(sizeof(lexeme) * 100); // Assuming a maximum of 100 lexemes
-
-    // Your implementation goes here...
+    lexemeList = malloc(sizeof(lexeme) * 100); // Assuming a maximum of 100 lexemes
+    
 
     // Example: Tokenize the input and add lexemes to lexeme_list
     // Example: Handle errors by calling printerror when necessary
 
     // Mark the end of the lexeme list
-    lexeme_list[lexeme_index].type = -1; // Use -1 to indicate the end of the list
+    lexemeList[lexemeIndex].type = -1; // Use -1 to indicate the end of the list
 
     // Call printerror or printtokens based on your logic
     // printerror("Some error message");
     // printtokens();
 
     // Return lexeme list
-    return lexeme_list;
+    return lexemeList;
 }
 
-int main() {
-    // Example usage
-    char input[] = "var x, [3]; procedure func if <> ? problem : bueno y(2) := 4 * 8 % 11 end begin call do while > < == candy : read write <===>=-+.";
-    lexeme* result = lexanalyzer(input);
+int main(int argc, char **argv) {
+    FILE *fp;
+    fp = fopen(argv[1], "rb");
+    printSrc(fp);
+    fclose(fp);
+
+    fp = fopen(argv[1], "r");
+
+    // Lexical Analyzer
+    lexeme* result = lexAnalyzer(fp);
 
     // Free the lexeme list after use
     free(result);
+
+    // CLose file
+    fclose(fp);
 
     return 0;
 }
